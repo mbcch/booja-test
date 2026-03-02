@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>서민 테스트</title>
+
+<style>
+
+*{box-sizing:border-box;}
+
+body{
+margin:0;
+min-height:100vh;
+background:linear-gradient(135deg,#1a1a1a,#2b2b2b);
+font-family:'Segoe UI',sans-serif;
+color:white;
+display:flex;
+justify-content:center;
+align-items:center;
+overflow-x:hidden;
+}
+
+.container{
+width:100%;
+max-width:1000px;
+padding:40px 20px;
+}
+
+.card{
+width:100%;
+background:rgba(255,255,255,0.05);
+backdrop-filter:blur(10px);
+border-radius:20px;
+padding:50px 40px;
+box-shadow:0 0 40px rgba(0,0,0,0.6);
+text-align:center;
+}
+
+h1{
+font-size:38px;
+margin-bottom:20px;
+}
+
+button{
+background:transparent;
+border:2px solid #f6d365;
+color:#f6d365;
+padding:14px 28px;
+margin:10px;
+font-size:16px;
+border-radius:12px;
+cursor:pointer;
+transition:.2s;
+}
+
+button:hover{
+background:#f6d365;
+color:black;
+box-shadow:0 0 15px rgba(246,211,101,.8);
+}
+
+.capture-wrapper{
+display:flex;
+justify-content:center;
+align-items:center;
+width:100%;
+margin-top:20px;
+}
+
+.capture-card{
+width:100%;
+max-width:420px;
+aspect-ratio:2/3;
+border-radius:20px;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+text-align:center;
+padding:40px;
+}
+
+.capture-card h2{
+font-size:28px;
+color:#f6d365;
+}
+
+.capture-card p{
+font-size:18px;
+}
+
+.capture-card img{
+width:60%;
+max-width:220px;
+margin-top:20px;
+}
+
+.level-high{
+background:linear-gradient(180deg,#3a2d00,#1a1400);
+box-shadow:0 0 40px rgba(255,215,0,.6);
+}
+
+.level-mid{
+background:linear-gradient(180deg,#2a2a2a,#1a1a1a);
+box-shadow:0 0 30px rgba(180,180,180,.4);
+}
+
+.level-low{
+background:linear-gradient(180deg,#1a1a1a,#111);
+box-shadow:0 0 20px rgba(100,100,100,.3);
+}
+
+.hidden{display:none;}
+
+@media(max-width:768px){
+.card{padding:30px 20px;}
+button{
+width:100%;
+margin:8px 0;
+}
+}
+
+</style>
+</head>
+<body>
+
+<div class="container">
+<div class="card">
+
+<h1>서민 테스트</h1>
+
+<div id="modeSelect">
+<h2>난이도 선택</h2>
+<button onclick="startTest('easy')">간단히 테스트</button>
+<button onclick="startTest('hard')">심화 테스트</button>
+</div>
+
+<div id="questionBox" class="hidden"></div>
+<div id="result" class="hidden"></div>
+
+</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<script>
+
+let incomeScore=0;
+let assetScore=0;
+let currentQuestion=0;
+let selectedQuestions=[];
+
+const easyQuestions=[
+{ text:"월 수입은?", answers:[
+{ text:"200 이하", income:1 },
+{ text:"200~500", income:2 },
+{ text:"500 이상", income:3 }
+]},
+{ text:"저축은?", answers:[
+{ text:"없음", asset:1 },
+{ text:"1천~5천", asset:2 },
+{ text:"5천 이상", asset:3 }
+]}
+];
+
+const hardQuestions=[...easyQuestions];
+for(let i=0;i<30;i++){
+hardQuestions.push({
+text:"재정 습관 심화 질문 "+(i+1),
+answers:[
+{ text:"부정적", income:1 },
+{ text:"보통", income:2 },
+{ text:"긍정적", income:3 }
+]});
+}
+
+function resetTest(){
+incomeScore=0;
+assetScore=0;
+currentQuestion=0;
+document.getElementById("result").classList.add("hidden");
+document.getElementById("questionBox").classList.add("hidden");
+document.getElementById("modeSelect").classList.remove("hidden");
+}
+
+function startTest(mode){
+document.getElementById("modeSelect").classList.add("hidden");
+document.getElementById("questionBox").classList.remove("hidden");
+selectedQuestions = mode==="easy"?easyQuestions:hardQuestions;
+showQuestion();
+}
+
+function showQuestion(){
+if(currentQuestion>=selectedQuestions.length){
+showResult();
+return;
+}
+
+let q=selectedQuestions[currentQuestion];
+let html="<h2>"+q.text+"</h2>";
+
+q.answers.forEach(a=>{
+html+=`<button onclick="selectAnswer(${a.income||0},${a.asset||0})">${a.text}</button><br>`;
+});
+
+html+=`<br><button onclick="resetTest()">처음으로</button>`;
+
+document.getElementById("questionBox").innerHTML=html;
+}
+
+function selectAnswer(income,asset){
+incomeScore+=income;
+assetScore+=asset;
+currentQuestion++;
+showQuestion();
+}
+
+function showResult(){
+
+let total=incomeScore+assetScore;
+let level,future,imagePath,levelClass;
+
+if(total>80){
+level="상위 계층";
+future="상위 유지 가능성 매우 높음";
+imagePath="rich.png";
+levelClass="level-high";
+}
+else if(total>40){
+level="중산 계층";
+future="상승 가능성 있음";
+imagePath="middle.png";
+levelClass="level-mid";
+}
+else{
+level="서민 계층";
+future="구조 개선 필요";
+imagePath="poor.png";
+levelClass="level-low";
+}
+
+document.getElementById("questionBox").classList.add("hidden");
+
+const resultBox=document.getElementById("result");
+resultBox.classList.remove("hidden");
+
+resultBox.innerHTML=`
+<div class="capture-wrapper">
+<div class="capture-card ${levelClass}" id="captureArea">
+<h2>${level}</h2>
+<p>${future}</p>
+<img src="${imagePath}">
+</div>
+</div>
+<br>
+<button onclick="downloadImage()">이미지 저장</button>
+<button onclick="resetTest()">다시하기</button>
+`;
+
+}
+
+function downloadImage(){
+
+const element=document.getElementById("captureArea");
+
+html2canvas(element,{
+scale:2,
+backgroundColor:null
+}).then(canvas=>{
+
+const finalCanvas=document.createElement("canvas");
+finalCanvas.width=1080;
+finalCanvas.height=1620;
+
+const ctx=finalCanvas.getContext("2d");
+
+ctx.fillStyle="#111";
+ctx.fillRect(0,0,1080,1620);
+
+const ratio=Math.min(
+1080/canvas.width,
+1620/canvas.height
+);
+
+const newWidth=canvas.width*ratio;
+const newHeight=canvas.height*ratio;
+
+const x=(1080-newWidth)/2;
+const y=(1620-newHeight)/2;
+
+ctx.drawImage(canvas,x,y,newWidth,newHeight);
+
+const link=document.createElement("a");
+link.download="테스트결과.jpg";
+link.href=finalCanvas.toDataURL("image/jpeg",0.95);
+link.click();
+
+});
+
+}
+
+</script>
+
+</body>
+</html>
